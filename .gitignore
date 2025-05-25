@@ -4,3 +4,4 @@ output/*
 !output/.gitkeep
 .DS_Store
 transcoder
+transcoder.exe
