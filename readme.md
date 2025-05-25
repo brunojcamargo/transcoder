@@ -100,6 +100,10 @@ Este projeto foi feito durante um estudo prático sobre transcodificação, stre
 | 360p      | 640x360     | 600 kbps     | `output/360p`       |
 | 180p      | 320x180     | 300 kbps     | `output/180p`       |
 
+### 🖥️ Hardware utilizado
+
+- **CPU:** Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+- **RAM:** 16 GB
 
 ### 💾 Uso de Disco
 *   **Total gerado:** 558,6 MB
@@ -136,8 +140,54 @@ Este projeto foi feito durante um estudo prático sobre transcodificação, stre
 | 360p      | 640x360     | 600 kbps     | `output/360p`       |
 | 180p      | 320x180     | 300 kbps     | `output/180p`       |
 
+### 🖥️ Hardware utilizado
+
+- **CPU:** Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+- **GPU:** Intel UHD Graphics 630, AMD Radeon Pro 5300M
+- **RAM:** 16 GB
 
 ### 💾 Uso de Disco
 *   **Total gerado:** 558,6 MB
 *   **Itens gerados:** 182 arquivos
+* * *
+
+🧪 Teste Local CPU (<=360p | GPU > 360p)
+--------------------------------
+### 📽️ Detalhes do Vídeo de Entrada
+
+*   **Duração:** 2 horas, 2 minutos e 0 segundos
+*   **Resolução:** 1920x1080 (Full HD)
+*   **Codec de vídeo:** H.264 (Main)
+*   **Codec de áudio:** AAC (stereo, 320 kbps)
+*   **Frame rate:** 29,97 fps
+*   **Tamanho do arquivo:** 4.103.518.112 bytes (~4,10 GB)
+*   **Bitrate médio:** ~4.484 kbps
+*   **Arquivo de entrada:** `input.ts`
+*   **Data de criação:** *não disponível nos metadados*
+
+⚙️ Transcodificação
+----------------------------
+
+*   **Tempo total:** 1 h 27 m 1.32 segundos `pode variar de acordo com os recursos disponives.`
+
+### 📤 Flavors gerados
+
+| Qualidade | Resolução   | Bitrate alvo | Caminho de saída    |
+|-----------|-------------|--------------|---------------------|
+| 2160p     | 3840x2160   | 14.000 kbps  | `output/2160p`      |
+| 1080p     | 1920x1080   | 6.000 kbps   | `output/1080p`      |
+| 720p      | 1280x720    | 3.000 kbps   | `output/720p`       |
+| 480p      | 854x480     | 1.000 kbps   | `output/480p`       |
+| 360p      | 640x360     | 600 kbps     | `output/360p`       |
+| 180p      | 320x180     | 300 kbps     | `output/180p`       |
+
+### 🖥️ Hardware utilizado
+
+- **CPU:** Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+- **GPU:** Intel UHD Graphics 630, AMD Radeon Pro 5300M
+- **RAM:** 16 GB
+
+### 💾 Uso de Disco
+*   **Total gerado:** 24,31 GB
+*   **Itens gerados:** 7.333 arquivos
 * * *
