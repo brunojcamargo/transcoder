@@ -328,7 +328,7 @@ func main() {
 	http.HandleFunc("/progress", handleProgress)
 	http.HandleFunc("/", handleRoot)
 
-	log.Println("Servidor em pé! Acesse: http://localhost:8080/transcode")
-	log.Println("Acompanhe o progresso em: http://localhost:8080/progress")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Println("Servidor em pé! Acesse: http://localhost:8666/transcode")
+	log.Println("Acompanhe o progresso em: http://localhost:8666/progress")
+	log.Fatal(http.ListenAndServe(":8666", nil))
 }
