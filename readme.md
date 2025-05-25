@@ -67,3 +67,40 @@ Este projeto utiliza **execução paralela com goroutines** para acelerar o proc
 -----------
 
 Este projeto foi feito durante um estudo prático sobre transcodificação, streaming adaptativo (ABR), containers de mídia e servidores simples em Go.
+
+* * *
+🧪 Teste Local
+--------------------------------
+### 📽️ Detalhes do Vídeo de Entrada
+
+*   **Duração:** 2 minutos e 50 segundos
+*   **Resolução:** 3840x2160 (4K UHD)
+*   **Codec de vídeo:** VP9 (Profile 0)
+*   **Codec de áudio:** AAC (stereo, 127 kbps)
+*   **Frame rate:** 29.97 fps
+*   **Tamanho do arquivo:** 193.873.781 bytes (~193,9 MB)
+*   **Bitrate médio:** ~9.991 kbps
+*   **Arquivo de entrada:** `input.mp4`
+*   **Data de criação:** 24/05/2025 (via metadata)
+
+⚙️ Transcodificação
+----------------------------
+
+*   **Tempo total:** 15 minutos e 48.60 segundos
+
+### 📤 Flavors gerados
+
+| Qualidade | Resolução   | Bitrate alvo | Caminho de saída    |
+|-----------|-------------|--------------|---------------------|
+| 2160p     | 3840x2160   | 14.000 kbps  | `output/2160p`      |
+| 1080p     | 1920x1080   | 6.000 kbps   | `output/1080p`      |
+| 720p      | 1280x720    | 3.000 kbps   | `output/720p`       |
+| 480p      | 854x480     | 1.000 kbps   | `output/480p`       |
+| 360p      | 640x360     | 600 kbps     | `output/360p`       |
+| 180p      | 320x180     | 300 kbps     | `output/180p`       |
+
+
+### 💾 Uso de Disco
+*   **Total gerado:** 558,6 MB
+*   **Itens gerados:** 182 arquivos
+* * *
