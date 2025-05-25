@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -36,7 +37,6 @@ var (
 	progressLock sync.Mutex
 )
 
-// Helpers para progresso
 func setProgress(flavor string, p float64) {
 	progressLock.Lock()
 	defer progressLock.Unlock()
@@ -52,7 +52,6 @@ func getProgress() map[string]float64 {
 	return cp
 }
 
-// Converter "00:01:23.45" para segundos float64
 func timeToSeconds(ts string) float64 {
 	parts := strings.Split(ts, ":")
 	if len(parts) != 3 {
@@ -64,7 +63,6 @@ func timeToSeconds(ts string) float64 {
 	return h*3600 + m*60 + s
 }
 
-// Obter duração total do vídeo
 func getDuration(input string) (float64, error) {
 	cmd := exec.Command("ffprobe", "-v", "error", "-show_entries", "format=duration",
 		"-of", "default=noprint_wrappers=1:nokey=1", input)
@@ -77,7 +75,6 @@ func getDuration(input string) (float64, error) {
 	return strconv.ParseFloat(strings.TrimSpace(out.String()), 64)
 }
 
-// Verifica se tem áudio
 func hasAudio(input string) bool {
 	cmd := exec.Command("ffprobe", "-v", "error", "-select_streams", "a",
 		"-show_entries", "stream=index", "-of", "csv=p=0", input)
@@ -89,21 +86,71 @@ func hasAudio(input string) bool {
 	return strings.TrimSpace(out.String()) != ""
 }
 
-// Transcodifica 1 flavor
-func transcodeFlavor(input string, flavor Flavor, includeAudio bool, duration float64, wg *sync.WaitGroup) {
+// Detecta encoder de hardware
+func detectEncoder() string {
+	if runtime.GOOS == "darwin" {
+		out, _ := exec.Command("ffmpeg", "-hide_banner", "-encoders").CombinedOutput()
+		if strings.Contains(string(out), "h264_videotoolbox") {
+			return "videotoolbox"
+		}
+		return "cpu"
+	}
+	// NVIDIA
+	if exec.Command("which", "nvidia-smi").Run() == nil {
+		out, _ := exec.Command("ffmpeg", "-hide_banner", "-encoders").CombinedOutput()
+		if strings.Contains(string(out), "h264_nvenc") {
+			return "nvidia"
+		}
+	}
+	// Intel QSV
+	out, _ := exec.Command("ffmpeg", "-hide_banner", "-encoders").CombinedOutput()
+	if strings.Contains(string(out), "h264_qsv") {
+		return "intel"
+	}
+	// AMD VAAPI
+	if strings.Contains(string(out), "h264_vaapi") {
+		return "amd"
+	}
+	return "cpu"
+}
+
+func transcodeFlavor(input string, flavor Flavor, includeAudio bool, duration float64, wg *sync.WaitGroup, encoder string) {
 	defer wg.Done()
 
 	os.MkdirAll(flavor.OutputDir, os.ModePerm)
+	args := []string{"-y", "-i", input}
 
-	args := []string{
-		"-y", "-i", input,
-		"-vf", fmt.Sprintf("scale=%s", flavor.Scale),
-		"-c:v", "libx264", "-b:v", flavor.Bitrate,
+	// Use GPU só para maiores ou igual a 480p; CPU para menores
+	useEncoder := encoder
+	if flavor.Name == "360p" || flavor.Name == "180p" {
+		useEncoder = "cpu"
 	}
+
+	switch useEncoder {
+	case "videotoolbox":
+		args = append(args, "-vf", fmt.Sprintf("scale=%s", flavor.Scale))
+		args = append(args, "-c:v", "h264_videotoolbox", "-b:v", flavor.Bitrate)
+	case "nvidia":
+		args = append(args, "-vf", fmt.Sprintf("scale=%s", flavor.Scale))
+		args = append(args, "-c:v", "h264_nvenc", "-b:v", flavor.Bitrate)
+	case "intel":
+		args = append(args, "-vf", fmt.Sprintf("scale=%s", flavor.Scale))
+		args = append(args, "-c:v", "h264_qsv", "-b:v", flavor.Bitrate)
+	case "amd":
+		w, h := strings.Split(flavor.Scale, ":")[0], strings.Split(flavor.Scale, ":")[1]
+		args = append(args,
+			"-vaapi_device", "/dev/dri/renderD128",
+			"-vf", fmt.Sprintf("format=nv12,hwupload,scale_vaapi=w=%s:h=%s", w, h),
+			"-c:v", "h264_vaapi", "-b:v", flavor.Bitrate)
+	default:
+		args = append(args, "-vf", fmt.Sprintf("scale=%s", flavor.Scale))
+		args = append(args, "-c:v", "libx264", "-b:v", flavor.Bitrate)
+	}
+
 	if includeAudio {
 		args = append(args, "-c:a", "aac", "-b:a", "128k")
 	} else {
-		args = append(args, "-an") // remove audio
+		args = append(args, "-an")
 	}
 	args = append(args,
 		"-f", "hls",
@@ -115,7 +162,7 @@ func transcodeFlavor(input string, flavor Flavor, includeAudio bool, duration fl
 	cmd := exec.Command("ffmpeg", args...)
 	stderr, _ := cmd.StderrPipe()
 
-	log.Printf("Transcodificando %s...\n", flavor.Name)
+	log.Printf("Transcodificando %s com encoder [%s]...\n", flavor.Name, useEncoder)
 	if err := cmd.Start(); err != nil {
 		log.Printf("Erro em %s: %v\n", flavor.Name, err)
 		setProgress(flavor.Name, 100)
@@ -127,7 +174,6 @@ func transcodeFlavor(input string, flavor Flavor, includeAudio bool, duration fl
 		for scanner.Scan() {
 			line := scanner.Text()
 			if strings.Contains(line, "time=") {
-				// time=00:00:33.84
 				timeStr := ""
 				if idx := strings.Index(line, "time="); idx != -1 {
 					timeStr = line[idx+5:]
@@ -147,7 +193,7 @@ func transcodeFlavor(input string, flavor Flavor, includeAudio bool, duration fl
 		}
 	}()
 	err := cmd.Wait()
-	setProgress(flavor.Name, 100) // Garante 100% ao finalizar
+	setProgress(flavor.Name, 100)
 	if err != nil {
 		log.Printf("Erro em %s: %v\n", flavor.Name, err)
 	} else {
@@ -155,7 +201,6 @@ func transcodeFlavor(input string, flavor Flavor, includeAudio bool, duration fl
 	}
 }
 
-// Cria o master manifest m3u8
 func generateMasterManifest() {
 	log.Println("Gerando master.m3u8...")
 	f, err := os.Create("output/master.m3u8")
@@ -177,7 +222,6 @@ func generateMasterManifest() {
 	log.Println("master.m3u8 gerado corretamente.")
 }
 
-// Detecta arquivo de entrada
 func detectInputFile() string {
 	paths := []string{
 		"input/input.mp4",
@@ -193,7 +237,6 @@ func detectInputFile() string {
 	return ""
 }
 
-// Endpoint para transcodificar
 func handleTranscode(w http.ResponseWriter, r *http.Request) {
 	input := detectInputFile()
 	duration, err := getDuration(input)
@@ -211,6 +254,9 @@ func handleTranscode(w http.ResponseWriter, r *http.Request) {
 		log.Println("Sem áudio, transcodificando apenas vídeo.")
 	}
 
+	encoder := detectEncoder()
+	log.Println("Encoder selecionado:", encoder)
+
 	// Resetar progresso
 	progressLock.Lock()
 	for _, flavor := range flavors {
@@ -221,7 +267,7 @@ func handleTranscode(w http.ResponseWriter, r *http.Request) {
 	var wg sync.WaitGroup
 	for _, flavor := range flavors {
 		wg.Add(1)
-		go transcodeFlavor(input, flavor, includeAudio, duration, &wg)
+		go transcodeFlavor(input, flavor, includeAudio, duration, &wg, encoder)
 	}
 	wg.Wait()
 
@@ -229,12 +275,10 @@ func handleTranscode(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Transcodificação finalizada com sucesso.")
 }
 
-// Endpoint para progresso
 func handleProgress(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	p := getProgress()
 
-	// Exemplo de estrutura de resposta:
 	type Progress struct {
 		Flavor  string  `json:"flavor"`
 		Percent float64 `json:"percent"`
@@ -250,7 +294,6 @@ func handleProgress(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-// Servir arquivos e conteúdos HLS
 func handleRoot(w http.ResponseWriter, r *http.Request) {
 	path := "." + r.URL.Path
 
