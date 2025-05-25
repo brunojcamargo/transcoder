@@ -9,7 +9,7 @@
 ----------------
 
 *   Recebe um vídeo de entrada (`.mp4` ou `.ts`)
-*   Gera múltiplos "flavors" (resoluções): de `2160p` a `180p`
+*   Gera múltiplos "flavors" (resoluções): de `2160p`, `1080p`,`720p`,`480p`,`360p` e `180p`
 *   Cria arquivos segmentados `.ts` e playlists `.m3u8` para cada resolução
 *   Gera um **manifesto adaptativo** `master.m3u8` com todas as versões
 *   Inclui um player HTML
@@ -35,9 +35,9 @@
 2.  Execute o projeto com:
     `docker compose up`
 3.  No navegador, acesse:
-    *   `http://localhost:8080/transcode` → inicia a transcodificação
-    *   `http://localhost:8080/hls.html` → player
-    *   `http://localhost:8080/progress` → retorna o progresso % de cada flavor
+    *   `http://localhost:8666/transcode` → inicia a transcodificação
+    *   `http://localhost:8666/hls.html` → player
+    *   `http://localhost:8666/progress` → retorna o progresso % de cada flavor
 
 * * *
 
@@ -87,7 +87,7 @@ Este projeto foi feito durante um estudo prático sobre transcodificação, stre
 ⚙️ Transcodificação
 ----------------------------
 
-*   **Tempo total:** 15 minutos e 48.60 segundos
+*   **Tempo total:** 15 minutos e 48.60 segundos `pode variar de acordo com os recursos disponives.`
 
 ### 📤 Flavors gerados
 
@@ -123,7 +123,7 @@ Este projeto foi feito durante um estudo prático sobre transcodificação, stre
 ⚙️ Transcodificação
 ----------------------------
 
-*   **Tempo total:** 4 minutos e  25.98 segundos
+*   **Tempo total:** 4 minutos e  25.98 segundos `pode variar de acordo com os recursos disponives.`
 
 ### 📤 Flavors gerados
 
