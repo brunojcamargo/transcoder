@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  transcoder:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./input:/app/input
+      - ./output:/app/output
+    stdin_open: true
+    tty: true
