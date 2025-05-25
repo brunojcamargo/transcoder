@@ -36,7 +36,8 @@
     `docker compose up`
 3.  No navegador, acesse:
     *   `http://localhost:8080/transcode` → inicia a transcodificação
-    *   `http://localhost:8080/index.html` → player
+    *   `http://localhost:8080/hls.html` → player
+    *   `http://localhost:8080/progress` → retorna o progresso % de cada flavor
 
 * * *
 
