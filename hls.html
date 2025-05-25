@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>🎥 Player HLS via hls.js</title>
+  <style>
+    body {
+      text-align: center;
+      background: #fafafa;
+      font-family: sans-serif;
+    }
+
+    video {
+      width: 960px;
+      height: 540px;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>🎬 Player HLS via JavaScript</h2>
+
+  <video id="video" controls></video>
+
+  <!-- ✅ Força hls.js -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script>
+    const video = document.getElementById('video');
+    const videoSrc = '/output/master.m3u8';
+
+    if (Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(videoSrc);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, function () {
+        video.play();
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = videoSrc;
+      video.addEventListener('loadedmetadata', function () {
+        video.play();
+      });
+    } else {
+      alert('Seu navegador não suporta HLS');
+    }
+  </script>
+
+</body>
+
+</html>
