@@ -3,3 +3,4 @@ input/*
 output/*
 !output/.gitkeep
 .DS_Store
+transcoder
